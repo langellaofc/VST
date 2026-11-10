@@ -16,6 +16,12 @@ jobs:
       - name: Build VST3 and AU (Universal)
         run: cmake --build build --config Release --parallel 3
 
+      - name: Configure MixChannel
+        run: cmake -S MixChannel -B build-mixchannel -DCMAKE_BUILD_TYPE=Release -DVC_COPY=OFF
+
+      - name: Build MixChannel VST3 and AU (Universal)
+        run: cmake --build build-mixchannel --config Release --parallel 3
+
       - name: Stage plugin bundles
         run: |
           set -euo pipefail
@@ -27,7 +33,23 @@ jobs:
           ditto "$vst3_path" "VocalChain-mac/Vocal Chain.vst3"
           ditto "$au_path" "VocalChain-mac/Vocal Chain.component"
 
+      - name: Stage MixChannel bundles
+        run: |
+          set -euo pipefail
+          vst3_path="$(find build-mixchannel/MixChannel_artefacts -type d -name 'Mix Channel.vst3' -print -quit)"
+          au_path="$(find build-mixchannel/MixChannel_artefacts -type d -name 'Mix Channel.component' -print -quit)"
+          test -n "$vst3_path"
+          test -n "$au_path"
+          mkdir -p MixChannel-mac
+          ditto "$vst3_path" "MixChannel-mac/Mix Channel.vst3"
+          ditto "$au_path" "MixChannel-mac/Mix Channel.component"
+
       - uses: actions/upload-artifact@v4
         with:
           name: VocalChain-mac
           path: VocalChain-mac/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MixChannel-mac
+          path: MixChannel-mac/
